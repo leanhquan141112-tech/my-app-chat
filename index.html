@@ -1,1 +1,48 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ứng dụng Chat trên GitHub</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .chat-container { width: 400px; background: white; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: flex; flex-direction: column; overflow: hidden; }
+        .chat-box { height: 350px; padding: 15px; overflow-y: auto; border-bottom: 1px solid #ddd; display: flex; flex-direction: column; gap: 10px; }
+        .message { background: #e4e6eb; padding: 8px 12px; border-radius: 15px; max-width: 70%; word-wrap: break-word; }
+        .input-area { display: flex; padding: 10px; background: #fff; }
+        input { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px; outline: none; }
+        button { background: #0084ff; color: white; border: none; padding: 8px 15px; margin-left: 5px; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #006dd3; }
+    </style>
+</head>
+<body>
 
+    <div class="chat-container">
+        <div class="chat-box" id="chatBox">
+            <div class="message">Chào mừng bạn đến với phòng chat trên GitHub!</div>
+        </div>
+        <div class="input-area">
+            <input type="text" id="messageInput" placeholder="Nhập tin nhắn...">
+            <button onclick="sendMessage()">Gửi</button>
+        </div>
+    </div>
+
+    <script>
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const chatBox = document.getElementById('chatBox');
+            if (input.value.trim() !== '') {
+                const msgDiv = document.createElement('div');
+                msgDiv.className = 'message';
+                msgDiv.style.alignSelf = 'flex-end';
+                msgDiv.style.background = '#0084ff';
+                msgDiv.style.color = 'white';
+                msgDiv.innerText = input.value;
+                chatBox.appendChild(msgDiv);
+                input.value = '';
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+        }
+    </script>
+</body>
+</html>
