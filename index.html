@@ -3,181 +3,184 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat Giống Messenger</title>
+    <title>Messenger - Chat Xịn Sò</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Tùy chỉnh thanh cuộn cho đẹp */
+        body { background-color: #f0f2f5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
         #chatBox::-webkit-scrollbar { width: 6px; }
-        #chatBox::-webkit-scrollbar-thumb { background-color: #d1d5db; border-radius: 3px; }
-        
-        /* Hiệu ứng cho bong bóng chat */
-        .msg-bubble {
-            max-width: 75%;
-            padding: 8px 12px;
-            border-radius: 18px;
-            font-size: 15px;
-            line-height: 1.4;
-            word-wrap: break-word;
-            position: relative;
-            margin-bottom: 4px;
-        }
-        .msg-them { background-color: #e4e6eb; color: #050505; align-self: flex-start; border-bottom-left-radius: 4px; }
-        .msg-me { background-color: #0084ff; color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
-        
-        /* Tên người gửi và giờ */
-        .sender-info { font-size: 11px; color: #65676b; margin-bottom: 2px; }
-        .msg-them .sender-info { margin-left: 10px; }
-        .msg-me .sender-info { margin-right: 10px; text-align: right; }
+        #chatBox::-webkit-scrollbar-thumb { background-color: #bcc0c4; border-radius: 3px; }
+        .bubble { max-width: 75%; padding: 8px 12px; border-radius: 18px; font-size: 14.5px; line-height: 1.4; word-wrap: break-word; position: relative; }
+        .bubble-me { background-color: #0084ff; color: white; border-bottom-right-radius: 4px; }
+        .bubble-other { background-color: #e4e6eb; color: #050505; border-bottom-left-radius: 4px; }
+        .reaction-badge { position: absolute; bottom: -8px; right: 4px; background: white; border-radius: 10px; padding: 1px 4px; font-size: 11px; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
     </style>
 </head>
-<body class="bg-gray-100 h-screen flex justify-center items-center font-sans antialiased">
+<body class="h-screen flex justify-center items-center m-0 p-0">
 
-    <!-- Container chính -->
-    <div class="w-full max-w-lg h-[650px] bg-white shadow-xl flex flex-col overflow-hidden md:rounded-2xl border border-gray-200">
+    <div class="w-full max-w-md h-full md:h-[650px] bg-white md:rounded-2xl shadow-xl flex flex-col overflow-hidden border border-gray-200">
         
-        <!-- Header Messenger -->
-        <div class="bg-white px-4 py-3 flex items-center justify-between border-b border-gray-200 shadow-sm sticky top-0 z-10">
+        <!-- Messenger Header -->
+        <div class="bg-white px-4 py-2.5 flex items-center justify-between border-b border-gray-200 shadow-sm z-10">
             <div class="flex items-center gap-3">
-                <!-- Avatar giả lập -->
-                <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-bold text-xl">😎</div>
+                <div class="relative">
+                    <div class="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-lg" id="avatarText">QC</div>
+                    <span class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
+                </div>
                 <div>
-                    <div class="font-bold text-gray-900">Bạn Bè 4 Phương</div>
-                    <div class="text-xs text-green-500 flex items-center gap-1">
-                        <span class="w-2 h-2 bg-green-500 rounded-full block"></span> Đang hoạt động
+                    <div class="font-bold text-gray-900 text-sm flex items-center gap-1">
+                        <span id="currentChatName">Phòng Chat Chung</span>
+                        <button onclick="changeName()" class="text-xs text-blue-500 font-normal hover:underline">(Đổi tên)</button>
                     </div>
+                    <div class="text-xs text-gray-500">Đang hoạt động</div>
                 </div>
             </div>
-            <div class="flex items-center gap-4 text-blue-600">
-                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 16 16"><path d="M6 10.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5zm-2-3a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm-2-3a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 0 1h-11a.5.5 0 0 1-.5-.5z"/></svg>
+            <div class="flex items-center gap-3 text-blue-600">
+                <button onclick="clearChat()" title="Xóa lịch sử chat" class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded hover:bg-gray-200">Xóa chat</button>
             </div>
         </div>
 
-        <!-- Khung chat -->
-        <div id="chatBox" class="flex-1 p-4 bg-white flex flex-col space-y-3 overflow-y-auto">
-            <!-- Tin nhắn mẫu -->
-            <div class="flex flex-col items-start msg-them">
-                <div class="sender-info">Người Lạ - 10:30 AM</div>
-                <div class="msg-bubble">Chào ông giáo! Ứng dụng chat này giống Messenger không?</div>
-            </div>
-            <div class="flex flex-col items-end msg-me">
-                <div class="sender-info">Bạn - 10:31 AM</div>
-                <div class="msg-bubble">Quá đỉnh luôn! Giống thật phết đấy.</div>
-            </div>
-        </div>
+        <!-- Khung hiển thị tin nhắn -->
+        <div id="chatBox" class="flex-1 p-4 overflow-y-auto flex flex-col space-y-3 bg-white"></div>
 
-        <!-- Ô nhập tin nhắn -->
-        <div class="p-3 bg-white border-t border-gray-200 flex items-center gap-2 sticky bottom-0">
-            <button class="text-blue-600 p-1 hover:bg-blue-50 rounded-full"><svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></button>
+        <!-- Ô nhập liệu & tính năng -->
+        <div class="p-3 bg-white border-t border-gray-200 flex items-center gap-2">
+            <!-- Nút gửi ảnh giả lập -->
+            <label class="cursor-pointer text-blue-600 hover:bg-blue-50 p-2 rounded-full transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                <input type="file" accept="image/*" class="hidden" onchange="sendImage(event)">
+            </label>
+
+            <!-- Input nhập tin nhắn -->
             <input type="text" id="messageInput" placeholder="Aa..." 
-                class="flex-1 bg-gray-100 rounded-full px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 transition border border-gray-200"
-                onkeypress="handleKeyPress(event)">
-            <button onclick="sendMessage()" class="text-blue-600 p-1 hover:bg-blue-50 rounded-full">
-                <svg class="w-7 h-7 transform rotate-90" fill="currentColor" viewBox="0 0 16 16"><path d="M1.585 8.686a.903.903 0 0 1 0-1.372l10.528-6.289A.903.903 0 0 1 13 1.856v12.288a.903.903 0 0 1-.887.909c-.248 0-.493-.1-.668-.286L1.585 8.686z"/></svg>
+                class="flex-1 bg-gray-100 text-gray-900 px-4 py-2 rounded-full text-sm outline-none focus:bg-white focus:ring-1 focus:ring-blue-500 transition border border-transparent focus:border-blue-300"
+                onkeypress="if(event.key === 'Enter') sendMessage()">
+
+            <!-- Thả nhanh icon 👍 -->
+            <button onclick="sendQuickEmoji('👍')" class="text-xl hover:scale-125 transition">👍</button>
+
+            <!-- Nút gửi -->
+            <button onclick="sendMessage()" class="bg-blue-600 hover:bg-blue-700 text-white w-9 h-9 rounded-full flex items-center justify-center transition shadow">
+                <svg class="w-4 h-4 transform rotate-90" fill="currentColor" viewBox="0 0 16 16"><path d="M1.585 8.686a.903.903 0 0 1 0-1.372l10.528-6.289A.903.903 0 0 1 13 1.856v12.288a.903.903 0 0 1-.887.909c-.248 0-.493-.1-.668-.286L1.585 8.686z"/></svg>
             </button>
         </div>
     </div>
 
     <script>
-        const chatBox = document.getElementById('chatBox');
-        const input = document.getElementById('messageInput');
-        const STORAGE_KEY = 'messenger_clone_msgs';
-        
-        // Tên người dùng ngẫu nhiên (cho vui)
-        const users = ["Tùng Lâm", "Minh Quân", "Hoàng Anh", "Khánh Ly"];
-        
-        // Lấy tin nhắn từ LocalStorage
+        const STORAGE_KEY = 'messenger_full_clone_data';
+        let myName = localStorage.getItem('messenger_my_name') || 'Quan';
+        document.getElementById('currentChatName').innerText = "Tài khoản: " + myName;
+        document.getElementById('avatarText').innerText = myName.substring(0, 2).toUpperCase();
+
+        function changeName() {
+            let newName = prompt("Nhập tên hiển thị của ông:", myName);
+            if(newName && newName.trim() !== '') {
+                myName = newName.trim();
+                localStorage.setItem('messenger_my_name', myName);
+                document.getElementById('currentChatName').innerText = "Tài khoản: " + myName;
+                document.getElementById('avatarText').innerText = myName.substring(0, 2).toUpperCase();
+            }
+        }
+
         function loadMessages() {
+            const chatBox = document.getElementById('chatBox');
             const msgs = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-            chatBox.innerHTML = ''; // Xóa mẫu
-            msgs.forEach(msg => appendMessageHTML(msg));
-            scrollToBottom();
-        }
+            chatBox.innerHTML = '';
+            
+            if(msgs.length === 0) {
+                chatBox.innerHTML = `<div class="text-center text-gray-400 text-xs my-auto">Chưa có tin nhắn nào. Hãy bắt đầu cuộc trò chuyện!</div>`;
+                return;
+            }
 
-        // Thêm 1 tin nhắn vào giao diện
-        function appendMessageHTML(data) {
-            const isMe = (data.type === 'me');
-            const msgDiv = document.createElement('div');
-            msgDiv.className = `flex flex-col ${isMe ? 'items-end' : 'items-start'} ${isMe ? 'msg-me' : 'msg-them'}`;
-            
-            const infoDiv = document.createElement('div');
-            infoDiv.className = 'sender-info';
-            infoDiv.innerText = `${data.sender} - ${data.time}`;
-            
-            const bubbleDiv = document.createElement('div');
-            bubbleDiv.className = 'msg-bubble';
-            bubbleDiv.innerText = data.text;
-            
-            msgDiv.appendChild(infoDiv);
-            msgDiv.appendChild(bubbleDiv);
-            chatBox.appendChild(msgDiv);
-        }
+            msgs.forEach((m, index) => {
+                const isMe = (m.sender === myName);
+                const row = document.createElement('div');
+                row.className = `flex flex-col ${isMe ? 'items-end' : 'items-start'} mb-2`;
 
-        // Cuộn xuống cuối khung chat
-        function scrollToBottom() {
+                // Tên người gửi nhỏ ở trên nếu không phải mình
+                if(!isMe) {
+                    const senderLabel = document.createElement('span');
+                    senderLabel.className = 'text-[11px] text-gray-500 ml-2 mb-0.5';
+                    senderLabel.innerText = m.sender;
+                    row.appendChild(senderLabel);
+                }
+
+                const bubbleWrapper = document.createElement('div');
+                bubbleWrapper.className = `flex items-end gap-1 ${isMe ? 'flex-row-reverse' : 'flex-row'}`;
+
+                const bubble = document.createElement('div');
+                bubble.className = `bubble ${isMe ? 'bubble-me' : 'bubble-other'}`;
+
+                if(m.type === 'image') {
+                    bubble.innerHTML = `<img src="${m.content}" class="max-w-[200px] rounded-lg cursor-pointer" onclick="window.open('${m.content}')">`;
+                } else {
+                    bubble.innerText = m.content;
+                }
+
+                // Thêm hiệu ứng reaction nếu có
+                if(m.reaction) {
+                    const reaction = document.createElement('div');
+                    reaction.className = 'reaction-badge';
+                    reaction.innerText = m.reaction;
+                    bubble.appendChild(reaction);
+                }
+
+                // Click đúp để thả tym/reaction
+                bubble.ondblclick = () => {
+                    toggleReaction(index);
+                };
+
+                bubbleWrapper.appendChild(bubble);
+                row.appendChild(bubbleWrapper);
+                chatBox.appendChild(row);
+            });
             chatBox.scrollTop = chatBox.scrollHeight;
         }
 
-        // Gửi tin nhắn
         function sendMessage() {
+            const input = document.getElementById('messageInput');
             const text = input.value.trim();
-            if (!text) return;
-            
-            const now = new Date();
-            const timeStr = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
-            
-            const newMessage = {
-                type: Math.random() > 0.5 ? 'me' : 'them', // 50% là mình, 50% là người khác
-                sender: Math.random() > 0.5 ? "Bạn" : users[Math.floor(Math.random() * users.length)], // Tên ngẫu nhiên
-                text: text,
-                time: timeStr
-            };
+            if(!text) return;
 
-            // Lưu vào LocalStorage
-            const msgs = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-            msgs.push(newMessage);
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(msgs));
-            
+            saveAndRender({ sender: myName, type: 'text', content: text, reaction: null });
             input.value = '';
-            appendMessageHTML(newMessage);
-            scrollToBottom();
         }
 
-        // Gửi bằng Enter
-        function handleKeyPress(e) {
-            if (e.key === 'Enter') sendMessage();
+        function sendQuickEmoji(emoji) {
+            saveAndRender({ sender: myName, type: 'text', content: emoji, reaction: null });
         }
 
-        // Tải lại tin nhắn khi mở web
-        loadMessages();
-        
-        // Tự động thêm tin nhắn ngẫu nhiên của người khác sau mỗi 5s để giả lập chat
-        setInterval(() => {
-            if(Math.random() > 0.7) { // 30% cơ hội có tin nhắn mới
-                 const themMessages = [
-                    "Ê, đang làm gì đấy?",
-                    "Vừa xem cái này hay phết",
-                    "Mai đi ăn không?",
-                    "Ok bro, hiểu rồi!",
-                    "Haha, vãi chưởng :))"
-                 ];
-                 const now = new Date();
-                 const timeStr = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
-                 const incomingMsg = {
-                    type: 'them',
-                    sender: users[Math.floor(Math.random() * users.length)],
-                    text: themMessages[Math.floor(Math.random() * themMessages.length)],
-                    time: timeStr
-                 };
-                 
-                 const msgs = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-                 msgs.push(incomingMsg);
-                 localStorage.setItem(STORAGE_KEY, JSON.stringify(msgs));
-                 
-                 appendMessageHTML(incomingMsg);
-                 scrollToBottom();
+        function sendImage(event) {
+            const file = event.target.files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                saveAndRender({ sender: myName, type: 'image', content: e.target.result, reaction: null });
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function toggleReaction(index) {
+            const msgs = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            msgs[index].reaction = msgs[index].reaction ? null : '❤️';
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(msgs));
+            loadMessages();
+        }
+
+        function saveAndRender(msgObj) {
+            const msgs = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            msgs.push(msgObj);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(msgs));
+            loadMessages();
+        }
+
+        function clearChat() {
+            if(confirm('Ông có chắc muốn xóa hết lịch sử chat không?')) {
+                localStorage.removeItem(STORAGE_KEY);
+                loadMessages();
             }
-        }, 5000);
+        }
 
+        loadMessages();
     </script>
 </body>
 </html>
