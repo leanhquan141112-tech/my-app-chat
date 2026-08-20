@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat App - Messenger Style</title>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
+
+        // ==========================================
+        // DÁN FIREBASE CONFIG CỦA ÔNG VÀO ĐÂY NHÉ
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "DÁN_API_KEY_CỦA_ÔNG_VÀO_ĐÂY",
+            authDomain: "...",
+            databaseURL: "...",
+            projectId: "...",
+            storageBucket: "...",
+            messagingSenderId: "...",
+            appId: "..."
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const chatRef = ref(db, 'messages');
+
+        // Tạo một tên người dùng ngẫu nhiên để phân biệt (hoặc mặc định là "Bạn")
+        const myName = "User_" + Math.floor(Math.random() * 1000);
+
+        window.sendMessage = () => {
+            const input = document.getElementById('messageInput');
+            if (input.value.trim() !== '') {
+                push(chatRef, {
+                    name: myName,
+                    text: input.value
+                });
+                input.value = '';
+            }
+        };
+
+        // Bắt sự kiện ấn phím Enter để gửi tin nhắn luôn cho nhanh
+        window.checkEnter = (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        };
+
+        // Lắng nghe tin nhắn mới từ Firebase trả về
+        onChildAdded(chatRef, (snapshot) => {
+            const data = snapshot.val();
+            const chatBox = document.getElementById('chatBox');
+            
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'message-row';
+
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble';
+            bubble.innerText = data.text;
+
+            // Nếu là tin nhắn do mình gửi -> nằm bên phải (màu xanh Messenger)
+            if (data.name === myName) {
+                msgDiv.classList.add('my-message');
+                bubble.classList.add('my-bubble');
+            } else {
+                // Tin nhắn của người khác -> nằm bên trái (màu xám)
+                msgDiv.classList.add('other-message');
+                bubble.classList.add('other-bubble');
+                
+                // Hiển thị tên người gửi nhỏ ở trên
+                const nameTag = document.createElement('div');
+                nameTag.className = 'name-tag';
+                nameTag.innerText = data.name;
+                msgDiv.appendChild(nameTag);
+            }
+
+            msgDiv.appendChild(bubble);
+            chatBox.appendChild(msgDiv);
+            chatBox.scrollTop = chatBox.scrollHeight; // Tự động cuộn xuống tin nhắn mới nhất
+        });
+    </script>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .chat-container { width: 400px; height: 550px; background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: flex; flex-direction: column; overflow: hidden; }
+        .chat-header { background: #0084ff; color: white; padding: 15px; font-weight: bold; text-align: center; font-size: 16px; }
+        .chat-box { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; background: #ffffff; }
+        .message-row { display: flex; flex-direction: column; max-width: 75%; }
+        .my-message { align-self: flex-end; align-items: flex-end; }
+        .other-message { align-self: flex-start; align-items: flex-start; }
+        .bubble { padding: 10px 14px; border-radius: 18px; font-size: 14px; word-wrap: break-word; line-height: 1.4; }
+        .my-bubble { background: #0084ff; color: white; border-bottom-right-radius: 4px; }
+        .other-bubble { background: #e4e6eb; color: #050505; border-bottom-left-radius: 4px; }
+        .name-tag { font-size: 11px; color: #65676b; margin-bottom: 2px; margin-left: 5px; }
+        .input-area { display: flex; padding: 12px; background: #fff; border-top: 1px solid #e4e6eb; align-items: center; }
+        input { flex: 1; padding: 10px 15px; border: 1px solid #ccd0d5; border-radius: 20px; outline: none; font-size: 14px; background: #f0f2f5; }
+        input:focus { background: #fff; border-color: #0084ff; }
+        button { background: #0084ff; color: white; border: none; width: 38px; height: 38px; margin-left: 8px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; font-weight: bold; }
+        button:hover { background: #006dd3; }
+    </style>
+</head>
+<body>
+
+    <div class="chat-container">
+        <div class="chat-header">Phòng Chat Messenger</div>
+        <div class="chat-box" id="chatBox"></div>
+        <div class="input-area">
+            <input type="text" id="messageInput" placeholder="Aa..." onkeypress="checkEnter(event)">
+            <button onclick="sendMessage()">➤</button>
+        </div>
+    </div>
+
+</body>
+</html>
