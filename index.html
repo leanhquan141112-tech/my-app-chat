@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Super Chat App</title>
-    <!-- Tailwind CSS cho giao diện cực đẹp -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Thư viện Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="bg-slate-100 h-screen flex justify-center items-center">
@@ -19,9 +17,7 @@
         </div>
 
         <!-- Khung chat -->
-        <div id="chatBox" class="flex-1 p-4 overflow-y-auto flex flex-col space-y-3 bg-slate-50">
-            <!-- Tin nhắn sẽ hiện ở đây -->
-        </div>
+        <div id="chatBox" class="flex-1 p-4 overflow-y-auto flex flex-col space-y-3 bg-slate-50"></div>
 
         <!-- Ô nhập tin nhắn -->
         <div class="p-3 bg-white border-t border-slate-200 flex items-center gap-2">
@@ -35,20 +31,15 @@
     </div>
 
     <script>
-        // ==========================================
-        // ĐIỀN THÔNG TIN SUPABASE CỦA ÔNG VÀO ĐÂY
-        // ==========================================
-        const SUPABASE_URL = 'DÁN_PROJECT_URL_CỦA_ÔNG_VÀO_ĐÂY';
-        const SUPABASE_KEY = 'DÁN_ANON_PUBLIC_KEY_CỦA_ÔNG_VÀO_ĐÂY';
+        const SUPABASE_URL = 'https://oqrzthshouucihiatsru.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_uv09SpNL6DWifhiv4Tow_A_XmGXBC6x';
 
         const { createClient } = supabase;
         const _supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // Tạo tên ngẫu nhiên cho người dùng
         const username = "User_" + Math.floor(Math.random() * 900 + 100);
         document.getElementById('myUsername').innerText = username;
 
-        // Tải lịch sử tin nhắn cũ khi mở web
         async function fetchMessages() {
             const { data, error } = await _supabase
                 .from('messages')
@@ -62,10 +53,11 @@
 
             const chatBox = document.getElementById('chatBox');
             chatBox.innerHTML = '';
-            data.forEach(msg => appendMessage(msg));
+            if (data) {
+                data.forEach(msg => appendMessage(msg));
+            }
         }
 
-        // Gửi tin nhắn lên Supabase
         async function sendMessage() {
             const input = document.getElementById('messageInput');
             const text = input.value.trim();
@@ -83,7 +75,6 @@
             }
         }
 
-        // Hiển thị tin nhắn lên giao diện
         function appendMessage(data) {
             const chatBox = document.getElementById('chatBox');
             const isMe = data.name === username;
@@ -111,7 +102,6 @@
             chatBox.scrollTop = chatBox.scrollHeight;
         }
 
-        // Lắng nghe tin nhắn thời gian thực (Realtime)
         _supabase
             .channel('public:messages')
             .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
@@ -119,8 +109,7 @@
             })
             .subscribe();
 
-            // Chạy khi vừa vào web
-            fetchMessages();
+        fetchMessages();
     </script>
 </body>
 </html>
