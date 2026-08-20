@@ -2,114 +2,33 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Super Chat App</title>
+    <title>Chat Nhanh</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="bg-slate-100 h-screen flex justify-center items-center">
-
-    <div class="w-full max-w-md h-[600px] bg-white shadow-2xl rounded-2xl flex flex-col overflow-hidden border border-slate-200">
-        <!-- Header -->
-        <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 font-bold text-center text-lg shadow-md flex items-center justify-between">
-            <span>💬 Phòng Chat Siêu Cấp</span>
-            <span id="myUsername" class="text-xs bg-blue-500 px-2 py-1 rounded-full">Đang kết nối...</span>
-        </div>
-
-        <!-- Khung chat -->
-        <div id="chatBox" class="flex-1 p-4 overflow-y-auto flex flex-col space-y-3 bg-slate-50"></div>
-
-        <!-- Ô nhập tin nhắn -->
-        <div class="p-3 bg-white border-t border-slate-200 flex items-center gap-2">
-            <input type="text" id="messageInput" placeholder="Nhập tin nhắn..." 
-                class="flex-1 bg-slate-100 text-slate-800 px-4 py-2.5 rounded-full outline-none focus:ring-2 focus:ring-blue-500 text-sm transition"
-                onkeypress="if(event.key === 'Enter') sendMessage()">
-            <button onclick="sendMessage()" class="bg-blue-600 hover:bg-blue-700 text-white w-10 h-10 rounded-full flex items-center justify-center shadow-md transition transform active:scale-95">
-                ➤
-            </button>
+<body class="bg-gray-100 flex justify-center items-center h-screen">
+    <div class="w-full max-w-sm bg-white rounded-lg shadow-md p-4">
+        <div id="chatBox" class="h-80 overflow-y-auto mb-4 p-2 border rounded bg-gray-50"></div>
+        <div class="flex gap-2">
+            <input id="msg" type="text" placeholder="Nhập tin nhắn..." class="flex-1 border p-2 rounded">
+            <button onclick="send()" class="bg-blue-500 text-white px-4 py-2 rounded">Gửi</button>
         </div>
     </div>
 
     <script>
-        const SUPABASE_URL = 'https://oqrzthshouucihiatsru.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_uv09SpNL6DWifhiv4Tow_A_XmGXBC6x';
-
-        const { createClient } = supabase;
-        const _supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-
-        const username = "User_" + Math.floor(Math.random() * 900 + 100);
-        document.getElementById('myUsername').innerText = username;
-
-        async function fetchMessages() {
-            const { data, error } = await _supabase
-                .from('messages')
-                .select('*')
-                .order('created_at', { ascending: true });
-
-            if (error) {
-                console.error('Lỗi tải tin nhắn:', error);
-                return;
-            }
-
-            const chatBox = document.getElementById('chatBox');
-            chatBox.innerHTML = '';
-            if (data) {
-                data.forEach(msg => appendMessage(msg));
-            }
+        function render() {
+            const msgs = JSON.parse(localStorage.getItem('chats') || '[]');
+            document.getElementById('chatBox').innerHTML = msgs.map(m => `<div class="mb-2 p-2 bg-white border rounded">${m}</div>`).join('');
         }
-
-        async function sendMessage() {
-            const input = document.getElementById('messageInput');
-            const text = input.value.trim();
-            if (!text) return;
-
-            const { error } = await _supabase
-                .from('messages')
-                .insert([{ name: username, text: text }]);
-
-            if (error) {
-                alert('Gửi tin nhắn thất bại!');
-                console.error(error);
-            } else {
-                input.value = '';
-            }
+        function send() {
+            const input = document.getElementById('msg');
+            if(!input.value) return;
+            const msgs = JSON.parse(localStorage.getItem('chats') || '[]');
+            msgs.push(input.value);
+            localStorage.setItem('chats', JSON.stringify(msgs));
+            input.value = '';
+            render();
         }
-
-        function appendMessage(data) {
-            const chatBox = document.getElementById('chatBox');
-            const isMe = data.name === username;
-
-            const wrapper = document.createElement('div');
-            wrapper.className = `flex flex-col ${isMe ? 'items-end' : 'items-start'}`;
-
-            if (!isMe) {
-                const nameTag = document.createElement('span');
-                nameTag.className = 'text-[10px] text-slate-500 ml-2 mb-1';
-                nameTag.innerText = data.name;
-                wrapper.appendChild(nameTag);
-            }
-
-            const bubble = document.createElement('div');
-            bubble.className = `max-w-[75%] px-4 py-2.5 rounded-2xl text-sm shadow-sm ${
-                isMe 
-                    ? 'bg-blue-600 text-white rounded-br-none' 
-                    : 'bg-white text-slate-800 border border-slate-200 rounded-bl-none'
-            }`;
-            bubble.innerText = data.text;
-
-            wrapper.appendChild(bubble);
-            chatBox.appendChild(wrapper);
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
-
-        _supabase
-            .channel('public:messages')
-            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
-                appendMessage(payload.new);
-            })
-            .subscribe();
-
-        fetchMessages();
+        render();
     </script>
 </body>
 </html>
